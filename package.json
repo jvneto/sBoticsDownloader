@@ -1,0 +1,28 @@
+{
+  "name": "sbotics_downloader",
+  "version": "1.0.0",
+  "description": "sBoticsDownloader is the intelligent download algorithm developed for internal use in the sBotics simulator launcher",
+  "main": "index.js",
+  "bugs": "https://github.com/jvneto/sBoticsDownloader/issues",
+  "repository": {
+    "url": "https://github.com/jvneto/sBoticsDownloader.git",
+    "type": "git"
+  },
+  "author": "Julio Cesar <60150667+jvneto@users.noreply.github.com>",
+  "license": "GNU GPLv3",
+  "keywords": [
+    "sbotics"
+  ],
+  "homepage": "https://sbotics.weduc.natalnet.br",
+  "files": [
+    "index.js"
+  ],
+  "bin": {
+    "sBoticsDownloader": "bin/sBoticsDownloader.js"
+  },
+  "dependencies": {
+    "each-parallel-async": "^1.0.0",
+    "extend-shallow": "^3.0.2",
+    "github-base": "^1.0.0"
+  }
+}
