@@ -1,6 +1,6 @@
 'use strict';
 
-var gitbase = require('github-base');
+var GithubBase = require('github-base');
 var extend = require('extend-shallow');
 var each = require('each-parallel-async');
 
@@ -14,10 +14,10 @@ const sBoticsDownloader = (settings) => {
   );
   settingsInstance.json = false;
   settingsInstance.apiurl = 'https://raw.githubusercontent.com';
-  gitbase.call(this, settingsInstance);
+  GithubBase.call(this, settingsInstance);
   this.settings = extend({}, settingsInstance, this.settings);
 };
-gitBase.extend(sBoticsDownloader);
+GithubBase.extend(sBoticsDownloader);
 
 sBoticsDownloader.prototype.file = function (path, options, cb) {
   if (typeof options === 'function') {
