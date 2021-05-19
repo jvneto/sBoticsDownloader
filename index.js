@@ -23,6 +23,7 @@ function sBoticsDownloader(settings) {
   GithubBase.call(this, settingsInstance);
   this.settings = extend({}, settingsInstance, this.settings);
 }
+
 GithubBase.extend(sBoticsDownloader);
 
 sBoticsDownloader.prototype.file = function (path, options, cb) {
