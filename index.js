@@ -64,7 +64,7 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
     wordsToRemove.forEach((element) => {
       if (path.includes(element)) path = path.replace(element, '');
     });
-  else path = savePath;
+  else if (savePath) path = savePath;
 
   if (downloadMode == 'external')
     (async () => {
