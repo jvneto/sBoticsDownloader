@@ -41,8 +41,6 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
     console.log(response);
     cb( !detailedAnswer ? (null, {path: path, contents: contents}):(null, {path: path, contents: contents, }) );
   });
-
-
   return this;
 };
 
