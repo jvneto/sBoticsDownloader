@@ -2,15 +2,20 @@
 
 const GithubBase = require('github-base');
 var extend = require('extend-shallow');
+const axios = require('axios');
 var each = require('each-parallel-async');
-const GitHub = require('github-base');
 
 function sBoticsDownloader(settings) {
   if (!(this instanceof sBoticsDownloader))
     return new sBoticsDownloader(settings);
 
   const settingsInstance = extend(
-    { branch: 'master', detailedAnswer: 'false', wordsToRemove: '' },
+    {
+      branch: 'master',
+      detailedAnswer: false,
+      externalDownload: false,
+      wordsToRemove: '',
+    },
     settings,
   );
   settingsInstance.json = false;
@@ -29,7 +34,12 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
     throw new TypeError('expected callback to be a function');
 
   var settingsInstance = extend(
-    { branch: 'master', path: path, downloadMode: options.downloadMode },
+    {
+      branch: 'master',
+      path: path,
+      downloadMode: options.downloadMode,
+      savePath: options.savePath,
+    },
     this.settings,
     options,
   );
@@ -46,34 +56,55 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
   const externalDownload = settingsInstance.externalDownload;
   const detailedAnswer = settingsInstance.detailedAnswer;
   const wordsToRemove = settingsInstance.wordsToRemove;
+  const savePath = settingsInstance.savePath;
+
   if (!downloadMode || !externalDownload) downloadMode = 'github';
 
-  if (wordsToRemove)
+  if (wordsToRemove && !savePath)
     wordsToRemove.forEach((element) => {
       if (path.includes(element)) path = path.replace(element, '');
     });
+  else path = savePath;
 
   if (downloadMode == 'external')
     (async () => {
       try {
-        const response = await axios.get(
-          'https://raw.githubusercontent.com/Txiag/sBotics/master/W32/MonoBleedingEdge/EmbedRuntime/MonoPosixHelper.dll',
+        const response = await axios.get(settingsInstance.path);
+        const status = {
+          code: response.status,
+          message: response.statusText,
+        };
+        cb(
+          null,
+          !detailedAnswer
+            ? { path: path, file: response.data }
+            : {
+                status: status,
+                path: path,
+                size: response.headers['content-length'],
+                file: response.data,
+              },
         );
-        console.log(response);
       } catch (error) {
-        console.error(error);
+        const status = { code: undefined, message: '' };
+        cb({ error: error, donwloadMode: downloadMode, status: status });
       }
     })();
   else
     this.get(
       '/:user/:repository/:branch/:path',
       settingsInstance,
-      (err, contents, response) => {
+      (error, contents, response) => {
         const status = {
           code: response.statusCode,
           message: response.statusMessage,
         };
-        if (err || response.statusCode != 200) return cb({ status: status });
+        if (error || response.statusCode != 200)
+          return cb({
+            error: error,
+            donwloadMode: downloadMode,
+            status: status,
+          });
         cb(
           null,
           !detailedAnswer
