@@ -98,7 +98,7 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
         settingsInstance,
         (error, contents, response) => {
           const status = {
-            code: response.statusCode,
+            code: response.statusCode ? response.statusCode : 500,
             message: response.statusMessage,
           };
           if (error || response.statusCode != 200)
