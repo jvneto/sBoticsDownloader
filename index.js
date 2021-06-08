@@ -67,59 +67,66 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
     });
   else if (savePath) path = savePath;
 
-  if (downloadMode == 'external')
-    (async () => {
-      try {
-        const response = await axios.get(settingsInstance.path);
-        const status = {
-          code: response.status,
-          message: response.statusText,
-        };
-        cb(
-          null,
-          !detailedAnswer
-            ? { path: path, file: response.data }
-            : {
-                status: status,
-                path: path,
-                size: response.headers['content-length'],
-                file: response.data,
-              },
-        );
-      } catch (error) {
-        const status = { code: undefined, message: '' };
-        cb({ error: error, donwloadMode: downloadMode, status: status });
-      }
-    })();
-  else
-    this.get(
-      '/:user/:repository/:branch/:path',
-      settingsInstance,
-      (error, contents, response) => {
-        const status = {
-          code: response.statusCode,
-          message: response.statusMessage,
-        };
-        if (error || response.statusCode != 200)
-          return cb({
-            error: error,
-            donwloadMode: downloadMode,
-            status: status,
-          });
-        cb(
-          null,
-          !detailedAnswer
-            ? { path: path, file: contents }
-            : {
-                status: status,
-                path: path,
-                size: response.headers['content-length'],
-                file: contents,
-              },
-        );
-      },
-    );
-
+  try {
+    if (downloadMode == 'external')
+      (async () => {
+        try {
+          const response = await axios.get(settingsInstance.path);
+          const status = {
+            code: response.status,
+            message: response.statusText,
+          };
+          cb(
+            null,
+            !detailedAnswer
+              ? { path: path, file: response.data }
+              : {
+                  status: status,
+                  path: path,
+                  size: response.headers['content-length'],
+                  file: response.data,
+                },
+          );
+        } catch (error) {
+          const status = { code: undefined, message: '' };
+          cb({ error: error, donwloadMode: downloadMode, status: status });
+        }
+      })();
+    else
+      this.get(
+        '/:user/:repository/:branch/:path',
+        settingsInstance,
+        (error, contents, response) => {
+          const status = {
+            code: response.statusCode,
+            message: response.statusMessage,
+          };
+          if (error || response.statusCode != 200)
+            return cb({
+              error: error,
+              donwloadMode: downloadMode,
+              status: status,
+            });
+          cb(
+            null,
+            !detailedAnswer
+              ? { path: path, file: contents }
+              : {
+                  status: status,
+                  path: path,
+                  size: response.headers['content-length'],
+                  file: contents,
+                },
+          );
+        },
+      );
+  } catch (error) {
+    return cb({
+      error: '500',
+      donwloadMode: '',
+      status: '',
+    });
+  }
   return this;
 };
 
