@@ -1,6 +1,6 @@
 {
   "name": "sbotics-downloader",
-  "version": "1.2.1",
+  "version": "1.2.0",
   "description": "sBoticsDownloader is the intelligent download algorithm developed for internal use in the sBotics simulator launcher",
   "main": "index.js",
   "bugs": "https://github.com/jvneto/sBoticsDownloader/issues",
