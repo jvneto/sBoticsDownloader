@@ -32,8 +32,8 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
     {
       branch: 'master',
       path: path,
-      downloadMode: options.downloadMode,
-      savePath: options.savePath,
+      downloadMode: '',
+      savePath: '',
     },
     this.settings,
     options,
@@ -64,112 +64,46 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
   else if (savePath) path = savePath;
 
   try {
-    if (downloadMode == 'external')
-      (async () => {
-        try {
-          const response = await axios.get(settingsInstance.path);
-          if (!detailedAnswer) {
-            return typeof cb !== 'function'
-              ? { path: path, file: contents }
-              : cb(null, { path: path, file: contents });
-          } else {
-            return typeof cb !== 'function'
-              ? {
-                  status: {
-                    code: response['statusCode'] ? response['statusCode'] : 500,
-                    message: response['statusMessage']
-                      ? response['statusMessage']
-                      : '',
-                  },
-                  path: path,
-                  size: response.headers['content-length'],
-                  file: contents,
-                }
-              : cb(null, {
-                  status: {
-                    code: response['statusCode'] ? response['statusCode'] : 500,
-                    message: response['statusMessage']
-                      ? response['statusMessage']
-                      : '',
-                  },
-                  path: path,
-                  size: response.headers['content-length'],
-                  file: contents,
-                });
-          }
-        } catch (error) {
-          const status = {
+    this.get(
+      '/:user/:repository/:branch/:path',
+      settingsInstance,
+      (error, contents, response) => {
+        if (error || response['statusCode'] != 200) {
+          cb({
             error: error,
             donwloadMode: downloadMode,
-            status: { code: undefined, message: '' },
-          };
-          return typeof cb !== 'function' ? status : cb(status);
-        }
-      })();
-    else
-      this.get(
-        '/:user/:repository/:branch/:path',
-        settingsInstance,
-        (error, contents, response) => {
-          console.log(response['statusCode']);
-
-          if (error || response['statusCode'] != 200) {
-            const erro = {
-              error: error,
-              donwloadMode: downloadMode,
+            status: {
+              code: response['statusCode'] ? response['statusCode'] : 500,
+              message: response['statusMessage']
+                ? response['statusMessage']
+                : '',
+            },
+          });
+        } else {
+          if (!detailedAnswer) {
+            cb(null, { path: path, file: contents });
+          } else {
+            cb(null, {
               status: {
                 code: response['statusCode'] ? response['statusCode'] : 500,
                 message: response['statusMessage']
                   ? response['statusMessage']
                   : '',
               },
-            };
-            console.log(erro);
-            return typeof cb !== 'function' ? erro : cb(erro);
-          } else {
-            if (!detailedAnswer) {
-              return typeof cb !== 'function'
-                ? { path: path, file: contents }
-                : cb(null, { path: path, file: contents });
-            } else {
-              return typeof cb !== 'function'
-                ? {
-                    status: {
-                      code: response['statusCode']
-                        ? response['statusCode']
-                        : 500,
-                      message: response['statusMessage']
-                        ? response['statusMessage']
-                        : '',
-                    },
-                    path: path,
-                    size: response.headers['content-length'],
-                    file: contents,
-                  }
-                : cb(null, {
-                    status: {
-                      code: response['statusCode']
-                        ? response['statusCode']
-                        : 500,
-                      message: response['statusMessage']
-                        ? response['statusMessage']
-                        : '',
-                    },
-                    path: path,
-                    size: response.headers['content-length'],
-                    file: contents,
-                  });
-            }
+              path: path,
+              size: response.headers['content-length'],
+              file: contents,
+            });
           }
-        },
-      );
+        }
+      },
+    );
   } catch (error) {
-    const response = {
-      error: '500',
+    cb({
+      error: 500,
       donwloadMode: '',
       status: '',
-    };
-    return typeof cb !== 'function' ? response : cb(response);
+    });
   }
   return this;
 };
