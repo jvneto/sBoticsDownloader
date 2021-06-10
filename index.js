@@ -8,7 +8,6 @@ var each = require('each-parallel-async');
 function sBoticsDownloader(settings) {
   if (!(this instanceof sBoticsDownloader))
     return new sBoticsDownloader(settings);
-
   const settingsInstance = extend(
     {
       branch: 'master',
@@ -27,12 +26,7 @@ function sBoticsDownloader(settings) {
 GithubBase.extend(sBoticsDownloader);
 
 sBoticsDownloader.prototype.file = function (path, options, cb) {
-  if (typeof options === 'function') {
-    cb = options;
-    options = {};
-  }
-  if (typeof cb !== 'function')
-    throw new TypeError('expected callback to be a function');
+  if (typeof options === 'function') (cb = options), (options = {});
 
   var settingsInstance = extend(
     {
@@ -44,10 +38,12 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
     this.settings,
     options,
   );
+
   if (!settingsInstance.repository)
-    return cb(new Error('expected "options.repository" to be specified'));
+    throw new TypeError('expected "options.repository" to be specified');
 
   const getrepository = settingsInstance.repository.split('/');
+
   if (getrepository.length > 1) {
     settingsInstance.user = getrepository[0];
     settingsInstance.repository = getrepository[1];
@@ -72,24 +68,42 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
       (async () => {
         try {
           const response = await axios.get(settingsInstance.path);
-          const status = {
-            code: response.status,
-            message: response.statusText,
-          };
-          cb(
-            null,
-            !detailedAnswer
-              ? { path: path, file: response.data }
-              : {
-                  status: status,
+          if (!detailedAnswer) {
+            return typeof cb !== 'function'
+              ? { path: path, file: contents }
+              : cb(null, { path: path, file: contents });
+          } else {
+            return typeof cb !== 'function'
+              ? {
+                  status: {
+                    code: response['statusCode'] ? response['statusCode'] : 500,
+                    message: response['statusMessage']
+                      ? response['statusMessage']
+                      : '',
+                  },
                   path: path,
                   size: response.headers['content-length'],
-                  file: response.data,
-                },
-          );
+                  file: contents,
+                }
+              : cb(null, {
+                  status: {
+                    code: response['statusCode'] ? response['statusCode'] : 500,
+                    message: response['statusMessage']
+                      ? response['statusMessage']
+                      : '',
+                  },
+                  path: path,
+                  size: response.headers['content-length'],
+                  file: contents,
+                });
+          }
         } catch (error) {
-          const status = { code: undefined, message: '' };
-          cb({ error: error, donwloadMode: downloadMode, status: status });
+          const status = {
+            error: error,
+            donwloadMode: downloadMode,
+            status: { code: undefined, message: '' },
+          };
+          return typeof cb !== 'function' ? status : cb(status);
         }
       })();
     else
@@ -97,35 +111,65 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
         '/:user/:repository/:branch/:path',
         settingsInstance,
         (error, contents, response) => {
-          const status = {
-            code: response.statusCode ? response.statusCode : 500,
-            message: response.statusMessage,
-          };
-          if (error || response.statusCode != 200)
-            return cb({
+          console.log(response['statusCode']);
+
+          if (error || response['statusCode'] != 200) {
+            const erro = {
               error: error,
               donwloadMode: downloadMode,
-              status: status,
-            });
-          cb(
-            null,
-            !detailedAnswer
-              ? { path: path, file: contents }
-              : {
-                  status: status,
-                  path: path,
-                  size: response.headers['content-length'],
-                  file: contents,
-                },
-          );
+              status: {
+                code: response['statusCode'] ? response['statusCode'] : 500,
+                message: response['statusMessage']
+                  ? response['statusMessage']
+                  : '',
+              },
+            };
+            console.log(erro);
+            return typeof cb !== 'function' ? erro : cb(erro);
+          } else {
+            if (!detailedAnswer) {
+              return typeof cb !== 'function'
+                ? { path: path, file: contents }
+                : cb(null, { path: path, file: contents });
+            } else {
+              return typeof cb !== 'function'
+                ? {
+                    status: {
+                      code: response['statusCode']
+                        ? response['statusCode']
+                        : 500,
+                      message: response['statusMessage']
+                        ? response['statusMessage']
+                        : '',
+                    },
+                    path: path,
+                    size: response.headers['content-length'],
+                    file: contents,
+                  }
+                : cb(null, {
+                    status: {
+                      code: response['statusCode']
+                        ? response['statusCode']
+                        : 500,
+                      message: response['statusMessage']
+                        ? response['statusMessage']
+                        : '',
+                    },
+                    path: path,
+                    size: response.headers['content-length'],
+                    file: contents,
+                  });
+            }
+          }
         },
       );
   } catch (error) {
-    return cb({
+    const response = {
       error: '500',
       donwloadMode: '',
       status: '',
-    });
+    };
+    return typeof cb !== 'function' ? response : cb(response);
   }
   return this;
 };
