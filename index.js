@@ -68,33 +68,41 @@ sBoticsDownloader.prototype.file = function (path, options, cb) {
       '/:user/:repository/:branch/:path',
       settingsInstance,
       (error, contents, response) => {
-        if (error || response['statusCode'] != 200) {
-          cb({
-            error: error,
-            donwloadMode: downloadMode,
-            status: {
-              code: response['statusCode'] ? response['statusCode'] : 500,
-              message: response['statusMessage']
-                ? response['statusMessage']
-                : '',
-            },
-          });
-        } else {
-          if (!detailedAnswer) {
-            cb(null, { path: path, file: contents });
-          } else {
-            cb(null, {
+        try {
+          if (error || response['statusCode'] != 200) {
+            cb({
+              error: error,
+              donwloadMode: downloadMode,
               status: {
                 code: response['statusCode'] ? response['statusCode'] : 500,
                 message: response['statusMessage']
                   ? response['statusMessage']
                   : '',
               },
-              path: path,
-              size: response.headers['content-length'],
-              file: contents,
             });
+          } else {
+            if (!detailedAnswer) {
+              cb(null, { path: path, file: contents });
+            } else {
+              cb(null, {
+                status: {
+                  code: response['statusCode'] ? response['statusCode'] : 500,
+                  message: response['statusMessage']
+                    ? response['statusMessage']
+                    : '',
+                },
+                path: path,
+                size: response.headers['content-length'],
+                file: contents,
+              });
+            }
           }
+        } catch (error) {
+          cb({
+            error: 404,
+            donwloadMode: '',
+            status: '',
+          });
         }
       },
     );
